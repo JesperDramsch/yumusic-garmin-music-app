@@ -97,6 +97,18 @@ class YuMusicSyncDelegate extends Communications.SyncDelegate {
 
     // Download the next song in the queue
     private function downloadNextSong() as Void {
+        // Incremental sync: advance past songs that are already persisted
+        // in the media cache, so only new tracks get downloaded.
+        while (_currentDownloadIndex < _songsToDownload.size()) {
+            var candidate = _songsToDownload[_currentDownloadIndex] as Dictionary?;
+            if (candidate != null && _library.isSongPersisted(candidate)) {
+                System.println("sync skip persisted song index " + _currentDownloadIndex.toString());
+                _currentDownloadIndex++;
+            } else {
+                break;
+            }
+        }
+
         if (_currentDownloadIndex >= _songsToDownload.size()) {
             // All songs processed
             if (_downloadedCount == 0 && _failedCount > 0) {
