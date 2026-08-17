@@ -2,6 +2,7 @@ import Toybox.Application;
 import Toybox.Application.Storage;
 import Toybox.Lang;
 import Toybox.Media;
+import Toybox.System;
 
 // Module to manage music library and downloaded songs
 class YuMusicLibrary {
@@ -84,6 +85,34 @@ class YuMusicLibrary {
         return true;
     }
 
+    // Delete a dropped song's cached media, unless another kept entry still
+    // references the same persisted content (shared track storage).
+    private function deleteCachedIfUnused(song as Dictionary?, keptSongs as Array) as Void {
+        if (song == null || !song.hasKey("contentRefId")) {
+            return;
+        }
+        var refId = safe_number(song["contentRefId"]);
+        if (refId == null) {
+            return;
+        }
+        for (var i = 0; i < keptSongs.size(); i++) {
+            var kept = keptSongs[i] as Dictionary?;
+            if (kept == null || !kept.hasKey("contentRefId")) {
+                continue;
+            }
+            var keptRefId = safe_number(kept["contentRefId"]);
+            if (keptRefId != null && keptRefId == refId) {
+                return;
+            }
+        }
+        try {
+            Media.deleteCachedItem(new Media.ContentRef(refId, Media.CONTENT_TYPE_AUDIO));
+            System.println("deleted cached item refId=" + refId.toString());
+        } catch (ex) {
+            // already gone or not persisted; nothing to free
+        }
+    }
+
     // Save songs to library
     function saveSongs(songs as Array) as Void {
         Storage.setValue(SONGS_KEY, songs as Array<Application.PropertyValueType>);
@@ -149,6 +178,7 @@ class YuMusicLibrary {
             existingById.remove(songId);
         }
 
+        var droppedSongs = [];
         var keys = existingById.keys();
         for (var k = 0; k < keys.size(); k++) {
             var key = keys[k];
@@ -157,11 +187,19 @@ class YuMusicLibrary {
                 var pId = oldSong["playlistId"] as String?;
                 if (pId != null && !pId.equals(playlistId)) {
                     mergedSongs.add(oldSong);
+                } else {
+                    // no longer in this playlist and not owned by another one
+                    droppedSongs.add(oldSong);
                 }
             }
         }
 
         saveSongs(mergedSongs);
+
+        // Free the cached media of tracks that were removed from the playlist
+        for (var d = 0; d < droppedSongs.size(); d++) {
+            deleteCachedIfUnused(droppedSongs[d] as Dictionary?, mergedSongs);
+        }
     }
 
     // Get all songs from library
@@ -253,6 +291,11 @@ class YuMusicLibrary {
 
     // Clear all songs and playlists
     function clearSongs() as Void {
+        // Free all cached media before forgetting the library
+        var songs = getSongs();
+        for (var i = 0; i < songs.size(); i++) {
+            deleteCachedIfUnused(songs[i] as Dictionary?, []);
+        }
         Storage.deleteValue(SONGS_KEY);
         Storage.deleteValue(PLAYLISTS_KEY);
         Storage.deleteValue(CURRENT_PLAYLIST_KEY);
@@ -282,10 +325,11 @@ class YuMusicLibrary {
         // Clean up songs
         var songs = getSongs();
         var newSongs = [];
+        var droppedSongs = [];
         for (var i = 0; i < songs.size(); i++) {
             var song = songs[i] as Dictionary?;
             if (song == null) { continue; }
-            
+
             var keepSong = true;
             if (song.hasKey("playlists")) {
                 var pList = song["playlists"] as Array;
@@ -306,9 +350,16 @@ class YuMusicLibrary {
 
             if (keepSong) {
                 newSongs.add(song);
+            } else {
+                droppedSongs.add(song);
             }
         }
         saveSongs(newSongs);
+
+        // Free the cached media of the removed tracks
+        for (var d = 0; d < droppedSongs.size(); d++) {
+            deleteCachedIfUnused(droppedSongs[d] as Dictionary?, newSongs);
+        }
     }
 
     // Get song by ID
