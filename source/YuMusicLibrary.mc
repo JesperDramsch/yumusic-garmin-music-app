@@ -49,6 +49,41 @@ class YuMusicLibrary {
         }
     }
 
+    // Check if a song is already persisted in the system media cache.
+    // Used by the sync delegate to skip re-downloading tracks that are
+    // already on the watch (incremental sync). If the stored flags point
+    // to content that no longer exists (e.g. library cleared), the stale
+    // flags are reset so the track gets downloaded again.
+    function isSongPersisted(song as Dictionary?) as Boolean {
+        if (song == null) {
+            return false;
+        }
+        if (!song.hasKey("downloaded") || song["downloaded"] != true) {
+            return false;
+        }
+        if (!song.hasKey("contentRefId")) {
+            return false;
+        }
+        var contentRefIdNumber = safe_number(song["contentRefId"]);
+        if (contentRefIdNumber == null) {
+            return false;
+        }
+        var content = null;
+        try {
+            var contentRef = new Media.ContentRef(contentRefIdNumber, Media.CONTENT_TYPE_AUDIO);
+            content = Media.getCachedContentObj(contentRef);
+        } catch (ex) {
+            content = null;
+        }
+        if (content == null) {
+            // Persisted content is gone; clear stale flags so it re-downloads.
+            song["downloaded"] = false;
+            song.remove("contentRefId");
+            return false;
+        }
+        return true;
+    }
+
     // Save songs to library
     function saveSongs(songs as Array) as Void {
         Storage.setValue(SONGS_KEY, songs as Array<Application.PropertyValueType>);
