@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.10.2 - 2026-08-30
+
+- Added a Shuffle All playback option for the full downloaded local library.
+- Added Shuffle All to the local playlist picker so users with split playlists can play everything without switching playlists mid-activity.
+- Kept the implementation backed by the existing content iterator instead of duplicating songs into a synthetic playlist.
+- Added tests for whole-library playback selection and downloaded-track counting.
+
 ## 1.10.1 - 2026-08-30
 
 - Fixed a Garmin "Media Error" crash when selecting additional playlists after other playlists had already been marked for sync.

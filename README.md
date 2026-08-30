@@ -22,6 +22,7 @@ Once connected via the Garmin Connect phone app, you can browse your favorite pl
 - **Offline Playback:** Listen to your downloaded music anywhere using the high-quality native Garmin music player.
 - **Fluid Interface:** A fast, modern layout focused on getting you to your music without the clutter.
 - **Instant Local Playback:** Swap between your downloaded playlists in seconds without needing an internet connection.
+- **Shuffle All:** Play the full downloaded library with shuffle enabled, even when it was synced through several smaller playlists.
 - **Auto-Tracking Offline Scrobbling**: Supports automatic scrobbling to keep your server's listening history updated on the next sync.
 - **Audio Quality (Transcoding) Control**: Choose your preferred download audio quality (320, 192, 128, or 96 kbps) through the Garmin Connect app settings to save watch storage.
 - **Compact Multi-Playlist Library**: Stores shared tracks once and keeps playlist membership separately, reducing Garmin storage pressure.
