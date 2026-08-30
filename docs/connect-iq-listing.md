@@ -2,7 +2,7 @@
 
 ## Recommended Version
 
-1.10.2
+1.11.0
 
 ## What's New
 

@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.10.2 - 2026-08-30
+## 1.11.0 - 2026-08-30
 
 - Added a Shuffle All playback option for the full downloaded local library.
 - Added Shuffle All to the local playlist picker so users with split playlists can play everything without switching playlists mid-activity.
