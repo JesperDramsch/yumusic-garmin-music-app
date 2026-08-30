@@ -13,5 +13,5 @@ YuMusic is designed to communicate with **Subsonic API** compatible media server
 
 Jellyfin uses a proprietary API and does not natively support the Subsonic API standard. Creating and maintaining a completely separate Jellyfin API client within YuMusic is outside the scope of this project.
 
-**Workaround for Jellyfin Users:**
-Because Navidrome is incredibly lightweight, many users who use Jellyfin for their primary media library simply install Navidrome alongside it. You can point Navidrome to the exact same music directory that Jellyfin uses. Navidrome will scan the music, and you can connect YuMusic to Navidrome to sync your tracks to your watch!
+**Options for Jellyfin Users:**
+Use a compatible Subsonic API bridge/plugin, or install Navidrome alongside Jellyfin and point it at the same music directory. YuMusic can then connect to the Subsonic-compatible endpoint to sync tracks to your watch.

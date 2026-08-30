@@ -9,7 +9,7 @@ YuMusic acts as an Audio Content Provider on Garmin Connect IQ. It syncs playlis
 ## Documentation Index
 
 - [Installation & Setup](installation.md) - How to install the app and configure your server credentials.
-- [Network Requirements](network-requirements.md) - **Important:** Read this to understand why HTTPS is required and how to expose your server.
+- [Network Requirements](network-requirements.md) - **Important:** Read this to understand HTTP/HTTPS behavior on Garmin and how to expose your server reliably.
 - [Supported Servers](supported-servers.md) - A list of supported servers and why certain platforms (like Jellyfin) are not natively compatible.
 - [Troubleshooting](troubleshooting.md) - Solutions for common sync, download, and memory errors.
 - [Development](development.md) - Guide for compiling and testing the app locally using Monkey C.

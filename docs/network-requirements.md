@@ -1,18 +1,22 @@
-# Network Requirements (HTTPS)
+# Network Requirements
 
-YuMusic relies on Garmin's `Communications` module to access your server. Garmin enforces extremely strict networking rules.
+YuMusic relies on Garmin's `Communications` module to access your server. The app accepts both `http://` and `https://` URLs, but the request still has to pass through Garmin Connect Mobile, the phone operating system, and the watch Wi-Fi downloader.
 
-## Why HTTP (`http://`) Does Not Work
-1. **Garmin Connect Mobile Proxy:** On Android and modern iOS devices, the Garmin Connect app proxies watch requests. Mobile operating systems strictly enforce App Transport Security (ATS) and Network Security Configuration, **blocking plain-text HTTP traffic** before it even leaves your phone. You will see error `-1001 (SECURE_CONNECTION_REQUIRED)`.
-2. **Wi-Fi Downloader Stack:** Audio syncs occur over Wi-Fi directly from the watch. The Garmin Wi-Fi network stack requires a secure connection to download audio streams. Attempting HTTP downloads over Wi-Fi usually results in error `0` or `-300` because the OS abruptly terminates the insecure connection.
+## HTTP vs HTTPS
+HTTP can work in some local setups, especially while browsing playlists through the phone connection. It is less reliable for audio sync because Garmin's platform may reject insecure traffic before YuMusic receives a useful response.
+
+HTTPS with a publicly trusted certificate is strongly recommended because it works with both playlist browsing and watch Wi-Fi downloads more consistently.
 
 ## Why Local IPs (e.g., `192.168.1.100`) Often Fail
-If you configure a local IP, the watch will try to reach it through your phone's Bluetooth connection. If your phone is on Cellular data (4G/5G) instead of your local Wi-Fi, the proxy will instantly time out (`-300`). Additionally, Garmin still expects an SSL certificate even on local IPs.
+If you configure a local IP, the phone and watch both need a route to that address at the moment Garmin performs the request. If your phone is on cellular data instead of your local Wi-Fi, the proxy can time out with `-300`. Some firmware or mobile OS combinations may also reject insecure local HTTP with `-1001`.
 
-## How to Set Up Your Server Correctly
-To use YuMusic, you must expose your server securely over HTTPS with a valid, publicly trusted SSL certificate (self-signed certificates are rejected by Garmin). 
+## Recommended Server Setup
+Expose your server over HTTPS with a valid, publicly trusted SSL certificate. Self-signed certificates are usually rejected by Garmin devices or the phone proxy.
 
-Popular and free ways to achieve this:
+Common options:
 - **Cloudflare Tunnels (Zero Trust)**: The easiest method. Cloudflare generates the HTTPS certificate automatically and tunnels traffic safely to your local server without port forwarding.
 - **Tailscale**: Using Tailscale's "MagicDNS" and "HTTPS Certs" features provides a secure, encrypted domain name for your server.
 - **Reverse Proxy**: Use Nginx Proxy Manager, Caddy, or Traefik with Let's Encrypt certificates.
+
+## Audio Download Requirements
+For sync, your Subsonic `/rest/stream.view` response must return an `audio/*` content type and a usable `Content-Length`. YuMusic requests MP3 streams with `estimateContentLength=true` so Navidrome-compatible servers can provide the length Garmin expects.

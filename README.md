@@ -12,7 +12,7 @@
 
 ## 🎵 Overview
 
-**YuMusic** transforms your Garmin watch into a powerful, standalone music player. Designed with a clean and intuitive interface, it allows you to connect directly to any **Subsonic-compatible media server** (such as Navidrome, Gonic, or Nextcloud Music).
+**YuMusic** transforms your Garmin watch into a standalone offline music player for your personal **Subsonic-compatible media server** such as Navidrome, Gonic, Airsonic, or Nextcloud Music.
 
 Once connected via the Garmin Connect phone app, you can browse your favorite playlists directly on your watch, download the tracks over Wi-Fi, and enjoy your music offline while running or working out, allowing you to completely leave your phone behind.
 
@@ -24,6 +24,8 @@ Once connected via the Garmin Connect phone app, you can browse your favorite pl
 - **Instant Local Playback:** Swap between your downloaded playlists in seconds without needing an internet connection.
 - **Auto-Tracking Offline Scrobbling**: Supports automatic scrobbling to keep your server's listening history updated on the next sync.
 - **Audio Quality (Transcoding) Control**: Choose your preferred download audio quality (320, 192, 128, or 96 kbps) through the Garmin Connect app settings to save watch storage.
+- **Compact Multi-Playlist Library**: Stores shared tracks once and keeps playlist membership separately, reducing Garmin storage pressure.
+- **Safe Playlist Removal**: Removing one local playlist preserves tracks that are still used by another synced playlist.
 - **Robust Error Diagnostics**: Built-in connection tester to help you identify firewall or proxy blockages instantly.
 
 ---
@@ -34,9 +36,11 @@ I have comprehensive documentation available to help you configure your server a
 
 - 📖 **[Read the Full Documentation](docs/readme.md)**
 - 🚀 **[Installation & Setup Guide](docs/installation.md)**
-- 🌐 **[Strict HTTPS Network Requirements](docs/network-requirements.md)** (MUST READ!)
+- 🌐 **[Network Requirements](docs/network-requirements.md)** (MUST READ!)
 - 🛠️ **[Troubleshooting Errors](docs/troubleshooting.md)**
 - 💻 **[Development Guide](docs/development.md)**
+- 📝 **[Changelog](CHANGELOG.md)**
+- 🛒 **[Connect IQ Listing Copy](docs/connect-iq-listing.md)**
 
 ### Supported Servers
 YuMusic officially supports **Subsonic API** compatible endpoints.
@@ -44,25 +48,21 @@ YuMusic officially supports **Subsonic API** compatible endpoints.
 - ✅ **Gonic**
 - ✅ **Airsonic**
 - ✅ **Nextcloud Music** (Requires Legacy Auth enabled)
-- ❌ **Jellyfin** (Not natively supported. Workaround: run Navidrome pointed at your Jellyfin music folder).
+- ❌ **Jellyfin** (Not natively supported. Use a Subsonic API bridge/plugin, or run Navidrome pointed at the same music folder).
 
-### ⚠️ Important: HTTPS Requirement
-Due to strict OS-level security constraints enforced by Garmin Connect Mobile (Android/iOS) and the watch's internal Wi-Fi downloader, **you must expose your server via a valid HTTPS URL**. Plain-text `http://` or local IPs (`192.168.x.x`) without trusted certificates will fail to sync audio. Read more in the [Networking Docs](docs/network-requirements.md).
+### ⚠️ Important: Network Requirements
+YuMusic accepts both `http://` and `https://` server URLs, but HTTPS is strongly recommended. Garmin Connect Mobile, phone operating systems, and some watch firmware versions may reject plain HTTP before the request reaches your server. Read more in the [Networking Docs](docs/network-requirements.md).
+
+### ⚠️ Important: Playlist and Watch Limits
+Garmin watches have strict memory and persistent-storage limits. YuMusic stores the local library compactly and avoids persisting authenticated stream URLs, but each individual Subsonic `getPlaylist` response still has to fit in watch memory while it is parsed. Keep playlists reasonably sized on memory-limited models.
 
 ---
 
 ## 🛠 SDK and API Version
 
-- **SDK Version:** 9.1.0
+- **SDK Version:** 9.2.0
 - **API Version:** 5.0.0
 
 ## 📝 License
 
 YuMusic is open-source software licensed under the **AGPL-3.0 License**. See the `LICENSE.txt` file for complete details.
-
----
-
-## 🤖 Meta Note
-
-If you're digging through the codebase and notice a highly sophisticated AI agent named Ella (or Yue) hanging out in the .ella/ folder � yes, I accidentally got sidetracked and spent hours fixing her internal prompt engineering and JSON parsers *inside* this Garmin app repo instead of working on the app itself. Don't worry, she just manages my CI/CD documentation and doesn't interfere with your watch app at all! 😅
-
