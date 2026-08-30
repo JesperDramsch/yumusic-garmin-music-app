@@ -283,6 +283,24 @@ class YuMusicLibrary {
         return containsString(copyPlaylistIds(song), playlistId);
     }
 
+    function getPlayableSongCount() as Number {
+        var songs = getSongs();
+        var count = 0;
+
+        for (var i = 0; i < songs.size(); i++) {
+            var song = songs[i] as Dictionary?;
+            if (song == null || !song.hasKey("contentRefId")) {
+                continue;
+            }
+
+            if (contentRefIdToString(song["contentRefId"]) != null) {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
     // Check if a song is already persisted in the system media cache.
     // Used by the sync delegate to skip re-downloading tracks that are
     // already on the watch (incremental sync). If the stored flags point
@@ -718,6 +736,10 @@ class YuMusicLibrary {
     // Set current playlist
     function setCurrentPlaylist(playlistId as String) as Void {
         Storage.setValue(CURRENT_PLAYLIST_KEY, playlistId);
+    }
+
+    function clearCurrentPlaylist() as Void {
+        Storage.deleteValue(CURRENT_PLAYLIST_KEY);
     }
 
     // Get current playlist

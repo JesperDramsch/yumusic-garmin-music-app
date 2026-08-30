@@ -292,3 +292,53 @@ function removeSongDropsOnlySelectedTrack(logger as Logger) as Boolean {
         && yuMusicFindSong(songs, "keep") != null
         && yuMusicFindSong(songs, "drop") == null;
 }
+
+(:test)
+function clearCurrentPlaylistSelectsWholeLibrary(logger as Logger) as Boolean {
+    Storage.clearValues();
+
+    var library = new YuMusicLibrary();
+    library.saveSelectedSongsPreservingDownloads([
+        yuMusicTestSong("p1-only", "P1 Only", null)
+    ], "P1");
+    library.saveSelectedSongsPreservingDownloads([
+        yuMusicTestSong("p2-only", "P2 Only", null)
+    ], "P2");
+
+    var p2Only = yuMusicFindSong(library.getSongs(), "p2-only");
+    if (p2Only == null) {
+        return false;
+    }
+
+    library.setCurrentPlaylist("P1");
+    if (library.getCurrentPlaylist() == null || library.songBelongsToPlaylist(p2Only, library.getCurrentPlaylist())) {
+        return false;
+    }
+
+    library.clearCurrentPlaylist();
+
+    return library.getCurrentPlaylist() == null
+        && library.songBelongsToPlaylist(p2Only, library.getCurrentPlaylist());
+}
+
+(:test)
+function playableSongCountUsesPersistedContentRefs(logger as Logger) as Boolean {
+    Storage.clearValues();
+
+    var library = new YuMusicLibrary();
+    library.saveSelectedSongsPreservingDownloads([
+        yuMusicTestSong("downloaded", "Downloaded", null),
+        yuMusicTestSong("pending", "Pending", null)
+    ], "P1");
+
+    var downloaded = library.getSongById("downloaded");
+    if (downloaded == null) {
+        return false;
+    }
+
+    downloaded["downloaded"] = true;
+    downloaded["contentRefId"] = "content-1";
+    library.saveSong(downloaded);
+
+    return library.getPlayableSongCount() == 1;
+}

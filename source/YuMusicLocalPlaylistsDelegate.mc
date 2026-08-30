@@ -18,10 +18,25 @@ class YuMusicLocalPlaylistsDelegate extends WatchUi.Menu2InputDelegate {
             return;
         }
 
+        if (id.equals("__yumusic_play_all__")) {
+            if (_library.getPlayableSongCount() == 0) {
+                showError("Sync music first");
+                return;
+            }
+
+            _library.clearCurrentPlaylist();
+            _library.setShuffle(true);
+            startPlayback();
+            return;
+        }
+
         // Set the current playlist
         var playlistId = id as String;
         _library.setCurrentPlaylist(playlistId);
-        
+        startPlayback();
+    }
+
+    private function startPlayback() as Void {
         try {
             // Tell the OS to cleanly exit configuration and transition to the music player
             Media.startPlayback(null);
@@ -31,6 +46,11 @@ class YuMusicLocalPlaylistsDelegate extends WatchUi.Menu2InputDelegate {
             _timer = new Timer.Timer();
             _timer.start(method(:triggerSecondPop), 200, false);
         }
+    }
+
+    private function showError(message as String) as Void {
+        var errorView = new YuMusicConfirmView("Error", message);
+        WatchUi.pushView(errorView, new YuMusicConfirmDelegate(false), WatchUi.SLIDE_LEFT);
     }
 
     function triggerSecondPop() as Void {

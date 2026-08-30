@@ -3,6 +3,7 @@ import Toybox.Lang;
 import Toybox.Media;
 import Toybox.Communications;
 import Toybox.PersistedContent;
+import Toybox.System;
 
 class YuMusicConfigurePlaybackDelegate extends WatchUi.Menu2InputDelegate {
     private var _library as YuMusicLibrary;
@@ -26,6 +27,8 @@ class YuMusicConfigurePlaybackDelegate extends WatchUi.Menu2InputDelegate {
             var view = new YuMusicLocalPlaylistsView();
             var delegate = new YuMusicLocalPlaylistsDelegate();
             WatchUi.pushView(view, delegate, WatchUi.SLIDE_LEFT);
+        } else if (id.equals("__yumusic_play_all__")) {
+            playAll();
         } else if (id.equals("addMusic")) {
             if (!_serverConfig.isConfigured()) {
                 var errorView = new YuMusicConfirmView("Error", "Server not configured");
@@ -97,6 +100,28 @@ class YuMusicConfigurePlaybackDelegate extends WatchUi.Menu2InputDelegate {
 
     function onBack() as Void {
         WatchUi.popView(WatchUi.SLIDE_RIGHT);
+    }
+
+    private function playAll() as Void {
+        if (_library.getPlayableSongCount() == 0) {
+            showError("Sync music first");
+            return;
+        }
+
+        _library.clearCurrentPlaylist();
+        _library.setShuffle(true);
+
+        try {
+            Media.startPlayback(null);
+        } catch (ex) {
+            System.println("start all playback failed: " + ex.toString());
+            WatchUi.popView(WatchUi.SLIDE_RIGHT);
+        }
+    }
+
+    private function showError(message as String) as Void {
+        var errorView = new YuMusicConfirmView("Error", message);
+        WatchUi.pushView(errorView, new YuMusicConfirmDelegate(false), WatchUi.SLIDE_LEFT);
     }
 
     function flushNextScrobble() as Void {

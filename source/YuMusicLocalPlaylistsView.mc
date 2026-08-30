@@ -15,14 +15,25 @@ class YuMusicLocalPlaylistsView extends WatchUi.Menu2 {
     function onShow() as Void {
         clearItems();
         var playlists = _library.getPlaylists();
+        var playableSongCount = _library.getPlayableSongCount();
+        var currentPlaylistId = _library.getCurrentPlaylist();
+
+        if (playableSongCount > 0) {
+            var subtitle = playableSongCount.toString() + " downloaded";
+            if (currentPlaylistId == null) {
+                subtitle = "\u25B6 " + subtitle;
+            }
+            addItem(new WatchUi.MenuItem("Shuffle All", subtitle, "__yumusic_play_all__", {}));
+            _itemCount++;
+        }
         
         if (playlists == null || playlists.size() == 0) {
-            addItem(new WatchUi.MenuItem("No Playlists", "Sync music first", "empty", {}));
-            _itemCount = 1;
+            if (playableSongCount == 0) {
+                addItem(new WatchUi.MenuItem("No Playlists", "Sync music first", "empty", {}));
+                _itemCount++;
+            }
             return;
         }
-
-        var currentPlaylistId = _library.getCurrentPlaylist();
 
         for (var i = 0; i < playlists.size(); i++) {
             var playlist = playlists[i] as Dictionary?;

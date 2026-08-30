@@ -7,6 +7,7 @@ class YuMusicConfigurePlaybackView extends WatchUi.Menu2 {
     private var _library as YuMusicLibrary;
 
     private var _playlistItem as WatchUi.MenuItem;
+    private var _playAllItem as WatchUi.MenuItem;
     private var _shuffleItem as WatchUi.MenuItem;
     private var _serverItem as WatchUi.MenuItem;
 
@@ -17,6 +18,8 @@ class YuMusicConfigurePlaybackView extends WatchUi.Menu2 {
 
         _playlistItem = new WatchUi.MenuItem("Select Playlist", "", "selectPlaylist", {});
         addItem(_playlistItem);
+        _playAllItem = new WatchUi.MenuItem("Shuffle All", "All downloaded songs", "__yumusic_play_all__", {});
+        addItem(_playAllItem);
         addItem(new WatchUi.MenuItem("Add Music", "Browse server", "addMusic", {}));
         addItem(new WatchUi.MenuItem("Sync Now", null, "syncNow", {}));
         addItem(new WatchUi.MenuItem("Sync Scrobbles", "Upload offline plays", "syncScrobbles", {}));
@@ -43,6 +46,13 @@ class YuMusicConfigurePlaybackView extends WatchUi.Menu2 {
 
         var statsText = songCount.toString() + " songs, " + minutes.toString() + " mins";
         _playlistItem.setSubLabel(statsText);
+
+        var playableSongCount = _library.getPlayableSongCount();
+        var playAllText = playableSongCount.toString() + " downloaded";
+        if (playableSongCount > 0 && _library.getCurrentPlaylist() == null) {
+            playAllText = "\u25B6 " + playAllText;
+        }
+        _playAllItem.setSubLabel(playAllText);
         
         var shuffleText = _library.getShuffle() ? "Disable Shuffle" : "Enable Shuffle";
         _shuffleItem.setLabel(shuffleText);
