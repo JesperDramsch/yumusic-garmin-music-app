@@ -51,7 +51,7 @@ YuMusic officially supports **Subsonic API** compatible endpoints.
 - ❌ **Jellyfin** (Not natively supported. Use a Subsonic API bridge/plugin, or run Navidrome pointed at the same music folder).
 
 ### ⚠️ Important: Network Requirements
-YuMusic accepts both `http://` and `https://` server URLs, but HTTPS is strongly recommended. Garmin Connect Mobile, phone operating systems, and some watch firmware versions may reject plain HTTP before the request reaches your server. Read more in the [Networking Docs](docs/network-requirements.md).
+YuMusic accepts both `http://` and `https://` server URLs. HTTP is plain-text and does not use certificates; HTTPS uses TLS and requires a certificate trusted by the phone/watch. For reliable syncing, expose your server to Garmin as HTTPS with a publicly trusted certificate. Read more in the [Networking Docs](docs/network-requirements.md).
 
 ### ⚠️ Important: Playlist and Watch Limits
 Garmin watches have strict memory and persistent-storage limits. YuMusic stores the local library compactly and avoids persisting authenticated stream URLs, but each individual Subsonic `getPlaylist` response still has to fit in watch memory while it is parsed. Keep playlists reasonably sized on memory-limited models.

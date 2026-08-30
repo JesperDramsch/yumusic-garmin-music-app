@@ -6,8 +6,8 @@ If you are experiencing issues, open YuMusic on your watch, scroll to the bottom
 
 ### `-1001 (Secure Connection Required)`
 Garmin's networking stack rejected the connection before YuMusic could talk to your server.
-* **Cause**: This is usually triggered by `http://`, a local IP, a self-signed certificate, or a TLS/certificate chain the phone or watch does not trust.
-* **Solution**: YuMusic accepts both HTTP and HTTPS URLs, but HTTPS with a publicly trusted certificate is the reliable setup. See [Network Requirements](network-requirements.md).
+* **Cause**: Garmin required HTTPS for that request, or rejected the TLS/certificate chain. HTTP has no certificate at all; HTTPS has a certificate and it must be trusted by the phone/watch.
+* **Solution**: Use an external `https://` URL with a publicly trusted certificate for reliable syncing. Your media server may still run on HTTP internally behind a reverse proxy. See [Network Requirements](network-requirements.md).
 
 ### `-300 (Timeout / Local IP?)`
 The watch could not reach the server within the time limit. 
@@ -16,7 +16,7 @@ The watch could not reach the server within the time limit.
 
 ### `Sync failed: 0` (Invalid Download Response)
 The watch successfully connected to your server and selected tracks, but Garmin did not return a valid persisted audio item after the download request.
-* **Cause**: Usually caused by the server returning a non-audio response, missing/invalid download metadata, an interrupted Wi-Fi transfer, or HTTP being blocked by the watch/phone stack.
+* **Cause**: Usually caused by the server returning a non-audio response, missing/invalid download metadata, an interrupted Wi-Fi transfer, or plain HTTP being rejected by the watch/phone stack.
 * **Solution**: Use YuMusic 1.10.1 or later, verify that your server's `/rest/stream.view` returns an `audio/*` content type, and prefer HTTPS with a publicly trusted certificate.
 
 ### `-404` or `-401`

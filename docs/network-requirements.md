@@ -1,11 +1,13 @@
 # Network Requirements
 
-YuMusic relies on Garmin's `Communications` module to access your server. The app accepts both `http://` and `https://` URLs, but the request still has to pass through Garmin Connect Mobile, the phone operating system, and the watch Wi-Fi downloader.
+YuMusic relies on Garmin's `Communications` module to access your server. The app lets you configure both `http://` and `https://` URLs, but the request still has to pass through Garmin Connect Mobile, the phone operating system, and the watch Wi-Fi downloader.
 
 ## HTTP vs HTTPS
-HTTP can work in some local setups, especially while browsing playlists through the phone connection. It is less reliable for audio sync because Garmin's platform may reject insecure traffic before YuMusic receives a useful response.
+HTTP is plain-text. It does not use certificates, so there is no such thing as an HTTP certificate. HTTP can work in some local setups, especially while browsing playlists through the phone connection, but it is not guaranteed for Garmin media sync.
 
-HTTPS with a publicly trusted certificate is strongly recommended because it works with both playlist browsing and watch Wi-Fi downloads more consistently.
+HTTPS uses TLS and requires a certificate trusted by the phone/watch. The Garmin SDK exposes `SECURE_CONNECTION_REQUIRED (-1001)`, which means the platform decided that an HTTPS connection is required for that request. For reliable syncing, expose your server to Garmin as `https://` with a publicly trusted certificate.
+
+It is fine if Navidrome, Gonic, or another server runs internally on HTTP behind your reverse proxy. What matters to Garmin is the URL configured in YuMusic. If the configured URL is `https://music.example.com`, Garmin sees HTTPS even if Caddy, Nginx, Traefik, or Cloudflare forwards to an internal HTTP backend.
 
 ## Why Local IPs (e.g., `192.168.1.100`) Often Fail
 If you configure a local IP, the phone and watch both need a route to that address at the moment Garmin performs the request. If your phone is on cellular data instead of your local Wi-Fi, the proxy can time out with `-300`. Some firmware or mobile OS combinations may also reject insecure local HTTP with `-1001`.

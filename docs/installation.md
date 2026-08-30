@@ -10,7 +10,7 @@ Open the **Garmin Connect** app on your phone:
 3. Tap **Settings**.
 
 You must fill in the following:
-* **Server URL**: Your public server address. **Must start with `https://`** (e.g., `https://music.mydomain.com`). See [Network Requirements](network-requirements.md) for why HTTP fails.
+* **Server URL**: Your server address, for example `https://music.mydomain.com` or `http://192.168.1.10:4533`. HTTPS with a publicly trusted certificate is strongly recommended for reliable Garmin syncing. HTTP is plain-text, does not use certificates, and may be rejected by Garmin on some devices or sync paths. See [Network Requirements](network-requirements.md).
 * **Username**: Your server username.
 * **Password**: Your server password (or API password for Nextcloud Music).
 * **Legacy Authentication (optional)**: Only check this if your server requires older API password transmission methods (like Nextcloud Music). Navidrome works perfectly with this disabled.

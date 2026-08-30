@@ -32,7 +32,7 @@ Key features:
 
 Important notes:
 
-- YuMusic accepts both `http://` and `https://` server URLs, but HTTPS is strongly recommended. Garmin Connect Mobile, phone operating systems, and some watch firmware versions may block HTTP and return errors such as `-1001`, `-300`, or `0`.
+- YuMusic accepts both `http://` and `https://` server URLs. HTTP is plain-text and does not use certificates. HTTPS uses TLS and requires a certificate trusted by the phone/watch. For reliable syncing, expose your server to Garmin as HTTPS with a publicly trusted certificate.
 - Your server must expose the Subsonic API under `/rest`.
 - Audio downloads must return an `audio/*` content type and a usable `Content-Length`. YuMusic requests MP3 streams with `estimateContentLength=true`.
 - Garmin watches have strict memory and storage limits. YuMusic now stores the local library more efficiently, but each individual playlist response still has to fit in the watch memory while it is being parsed. Keep playlists reasonably sized on memory-limited models.
