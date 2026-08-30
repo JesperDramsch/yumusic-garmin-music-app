@@ -54,7 +54,7 @@ class YuMusicContentDelegate extends Media.ContentDelegate {
             if (songId != null) {
                 _api.star(songId, method(:onStarResponse));
             } else {
-                var contentRefString = contentRefId as String?;
+                var contentRefString = _library.contentRefIdToString(contentRefId);
                 if (contentRefString != null) {
                     _api.star(contentRefString, method(:onStarResponse));
                 }
@@ -71,7 +71,7 @@ class YuMusicContentDelegate extends Media.ContentDelegate {
             if (songId != null) {
                 _api.unstar(songId, method(:onUnstarResponse));
             } else {
-                var contentRefString = contentRefId as String?;
+                var contentRefString = _library.contentRefIdToString(contentRefId);
                 if (contentRefString != null) {
                     _api.unstar(contentRefString, method(:onUnstarResponse));
                 }
@@ -95,7 +95,7 @@ class YuMusicContentDelegate extends Media.ContentDelegate {
             _library.setLastPlayedContentRefId(contentRefId);
             var song = _library.getSongByContentRefId(contentRefId);
             var songId = song != null ? song["id"] as String? : null;
-            var targetId = songId != null ? songId : (contentRefId as String?);
+            var targetId = songId != null ? songId : _library.contentRefIdToString(contentRefId);
 
             if (targetId != null) {
                 // Queue scrobble locally to support offline playback

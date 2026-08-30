@@ -34,21 +34,14 @@ class YuMusicContentIterator extends Media.ContentIterator {
             }
 
             // Only include songs that belong to the active playlist (if one is set).
-            if (playlistId != null) {
-                var pId = song.hasKey("playlistId") ? song["playlistId"] as String? : null;
-                if (pId == null || !pId.equals(playlistId)) {
-                    continue;
-                }
+            if (!_library.songBelongsToPlaylist(song, playlistId)) {
+                continue;
             }
 
-            // Only expose songs that have been downloaded (have a numeric contentRefId).
+            // Only expose songs that have been downloaded and have a valid media content ref.
             var contentRefId = null;
             if (song.hasKey("contentRefId")) {
-                try {
-                    contentRefId = song["contentRefId"] as Number?;
-                } catch (ex) {
-                    contentRefId = null;
-                }
+                contentRefId = _library.contentRefIdToString(song["contentRefId"]);
             }
             if (contentRefId != null) {
                 filtered.add(song);
@@ -70,9 +63,9 @@ class YuMusicContentIterator extends Media.ContentIterator {
                     if (s == null) { continue; }
                     var id = null;
                     if (s.hasKey("contentRefId")) {
-                        try { id = s["contentRefId"] as Number?; } catch (ex) { id = null; }
+                        id = _library.contentRefIdToString(s["contentRefId"]);
                     }
-                    if (id != null && id == lastPlayed) {
+                    if (id != null && id.equals(lastPlayed)) {
                         _currentIndex = j;
                         break;
                     }

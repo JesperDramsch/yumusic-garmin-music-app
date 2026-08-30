@@ -95,6 +95,76 @@ class YuMusicSyncDelegate extends Communications.SyncDelegate {
         }
     }
 
+    private function getDownloadUrlForSong(song as Dictionary?) as String? {
+        if (song == null) {
+            return null;
+        }
+
+        var streamUrl = song.hasKey("streamUrl") ? song["streamUrl"] as String? : null;
+        if (streamUrl != null && streamUrl.length() > 0) {
+            return streamUrl;
+        }
+
+        var url = song.hasKey("url") ? song["url"] as String? : null;
+        if (url != null && url.length() > 0) {
+            return url;
+        }
+
+        var songId = song.hasKey("id") ? song["id"] as String? : null;
+        if (songId == null || songId.length() == 0) {
+            return null;
+        }
+
+        var generatedUrl = _api.getStreamUrl(songId);
+        if (generatedUrl.length() == 0) {
+            return null;
+        }
+        return generatedUrl;
+    }
+
+    private function recordDownloadFailure(responseCode as Number) as Void {
+        if (_firstFailureCode == null) {
+            _firstFailureCode = responseCode;
+        }
+        _failedCount++;
+        _currentDownloadIndex++;
+        downloadNextSong();
+    }
+
+    private function extractPersistedContentId(data as Object?) as String? {
+        var mediaContentRef = data as Media.ContentRef?;
+        if (mediaContentRef != null) {
+            return _library.contentRefIdToString(mediaContentRef.getId());
+        }
+
+        var mediaContent = data as Media.Content?;
+        if (mediaContent != null) {
+            var contentRef = mediaContent.getContentRef();
+            if (contentRef != null) {
+                return _library.contentRefIdToString(contentRef.getId());
+            }
+        }
+
+        var directContent = data as PersistedContent.Content?;
+        if (directContent != null) {
+            return _library.contentRefIdToString(directContent.getId());
+        }
+
+        var iterator = data as PersistedContent.Iterator?;
+        if (iterator != null) {
+            try {
+                var content = iterator.next() as PersistedContent.Content?;
+                if (content != null) {
+                    return _library.contentRefIdToString(content.getId());
+                }
+            } catch (ex) {
+                System.println("sync persisted iterator read failed: " + ex.toString());
+            }
+        }
+
+        return null;
+    }
+
     // Download the next song in the queue
     private function downloadNextSong() as Void {
         // Incremental sync: advance past songs that are already persisted
@@ -127,24 +197,19 @@ class YuMusicSyncDelegate extends Communications.SyncDelegate {
 
         var song = _songsToDownload[_currentDownloadIndex] as Dictionary?;
         if (song == null) {
-            _currentDownloadIndex++;
-            downloadNextSong();
+            recordDownloadFailure(0);
             return;
         }
 
-        var url = song["url"] as String?;
+        var url = getDownloadUrlForSong(song);
         if (url == null) {
-            _currentDownloadIndex++;
-            downloadNextSong();
+            System.println("sync download skipped invalid song at index " + _currentDownloadIndex.toString());
+            recordDownloadFailure(0);
             return;
         }
 
-        var streamUrl = song.hasKey("streamUrl") ? song["streamUrl"] as String? : null;
-        if (streamUrl != null) {
-            url = streamUrl;
-        }
-
-        System.println("sync download song index " + _currentDownloadIndex.toString() + ": " + url);
+        var songId = song.hasKey("id") ? song["id"] as String? : null;
+        System.println("sync download song index " + _currentDownloadIndex.toString() + " id=" + (songId != null ? songId : "unknown"));
 
         // Download options (audio content provider expects audio responses)
         var options = {
@@ -172,23 +237,30 @@ class YuMusicSyncDelegate extends Communications.SyncDelegate {
             // Song downloaded successfully
             var song = _songsToDownload[_currentDownloadIndex] as Dictionary?;
             if (song != null) {
-                song["downloaded"] = true;
-
                 // For HTTP_RESPONSE_CONTENT_TYPE_AUDIO, the response object can provide
                 // the persisted media id used by the system media cache.
-                var persistedContent = data as PersistedContent.Content?;
-                if (persistedContent != null) {
-                    var persistedIdNumber = persistedContent.getId() as Number?;
-                    if (persistedIdNumber != null) {
-                        song["contentRefId"] = persistedIdNumber;
-                        System.println("sync downloaded persisted id: " + persistedIdNumber.toString());
-                    }
-                } else {
-                    System.println("sync download response had no persisted content object");
+                var persistedId = extractPersistedContentId(data);
+                if (persistedId == null) {
+                    System.println("sync download response had no persisted content id");
+                    recordDownloadFailure(0);
+                    return;
                 }
-            }
 
-            _library.saveSongs(_songsToDownload);
+                song["downloaded"] = true;
+                song["contentRefId"] = persistedId;
+                System.println("sync downloaded persisted id: " + persistedId);
+
+                try {
+                    _library.saveSong(song);
+                } catch (ex) {
+                    System.println("sync save song failed: " + ex.toString());
+                    Communications.notifySyncComplete("Library save failed");
+                    return;
+                }
+            } else {
+                recordDownloadFailure(0);
+                return;
+            }
 
             _downloadedCount++;
 
@@ -197,13 +269,7 @@ class YuMusicSyncDelegate extends Communications.SyncDelegate {
             downloadNextSong();
         } else {
             System.println("sync download failed responseCode: " + responseCode.toString());
-            if (_firstFailureCode == null) {
-                _firstFailureCode = responseCode;
-            }
-            _failedCount++;
-            // Download failed, try next song
-            _currentDownloadIndex++;
-            downloadNextSong();
+            recordDownloadFailure(responseCode);
         }
     }
 

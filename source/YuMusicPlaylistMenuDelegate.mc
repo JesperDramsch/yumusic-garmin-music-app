@@ -122,15 +122,12 @@ class YuMusicPlaylistMenuDelegate extends WatchUi.Menu2InputDelegate {
             var album = song.hasKey("album") ? song["album"] as String? : null;
             if (album == null) { album = "Unknown"; }
 
-            var streamUrl = _api.getStreamUrl(songId);
             finalSongs.add({
                 "id"        => songId,
                 "title"     => title,
                 "artist"    => artist,
                 "album"     => album,
-                "duration"  => duration != null ? duration : 0,
-                "url"       => streamUrl,
-                "streamUrl" => streamUrl
+                "duration"  => duration != null ? duration : 0
             });
         }
 
@@ -153,9 +150,16 @@ class YuMusicPlaylistMenuDelegate extends WatchUi.Menu2InputDelegate {
                 "name"      => playlistMeta.hasKey("name") ? playlistMeta["name"] : "Unnamed",
                 "songCount" => songs.size()
             };
-            _library.saveDownloadedPlaylist(savedPlaylist);
-            _library.saveSelectedSongsPreservingDownloads(songs, playlistId);
-            _library.setCurrentPlaylist(playlistId);
+
+            try {
+                _library.saveSelectedSongsPreservingDownloads(songs, playlistId);
+                _library.saveDownloadedPlaylist(savedPlaylist);
+                _library.setCurrentPlaylist(playlistId);
+            } catch (ex) {
+                System.println("save selected playlist failed: " + ex.toString());
+                showError("Library storage full.\nRemove media.");
+                return;
+            }
         }
 
         var confirmView = new YuMusicConfirmView(

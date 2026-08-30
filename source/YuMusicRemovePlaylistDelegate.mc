@@ -1,6 +1,7 @@
 import Toybox.WatchUi;
 import Toybox.Lang;
 import Toybox.Timer;
+import Toybox.System;
 
 class YuMusicRemovePlaylistDelegate extends WatchUi.Menu2InputDelegate {
     private var _library as YuMusicLibrary;
@@ -18,8 +19,14 @@ class YuMusicRemovePlaylistDelegate extends WatchUi.Menu2InputDelegate {
 
         var playlistId = id as String;
         
-        // Remove the playlist
-        _library.removePlaylist(playlistId);
+        try {
+            _library.removePlaylist(playlistId);
+        } catch (ex) {
+            System.println("remove playlist failed: " + ex.toString());
+            var errorView = new YuMusicConfirmView("Error", "Remove failed");
+            WatchUi.pushView(errorView, new WatchUi.BehaviorDelegate(), WatchUi.SLIDE_LEFT);
+            return;
+        }
         
         WatchUi.popView(WatchUi.SLIDE_RIGHT);
         

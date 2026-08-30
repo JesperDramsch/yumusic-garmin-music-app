@@ -120,37 +120,47 @@ class YuMusicSubsonicAPI {
         return bytes;
     }
 
+    private function getNormalizedServerUrl() as String {
+        if (_serverUrl == null) {
+            return "";
+        }
+
+        var serverUrl = _serverUrl + "";
+        while (serverUrl.length() > 0 && serverUrl.substring(serverUrl.length() - 1, serverUrl.length()) == "/") {
+            serverUrl = serverUrl.substring(0, serverUrl.length() - 1);
+        }
+        return serverUrl;
+    }
+
+    private function encodeParam(value as Object?) as String {
+        return Communications.encodeURL(value != null ? value.toString() : "");
+    }
+
     // Build base URL with authentication parameters
     private function buildBaseUrl(endpoint as String) as String {
         if (_serverUrl == null || _username == null) {
             return "";
         }
 
-        // Coerce nullable fields into non-null strings after the null guard
-        // and normalize the server URL to avoid a double slash before /rest.
-        var serverUrl = _serverUrl + "";
-        if (serverUrl.length() > 0 && serverUrl.substring(serverUrl.length() - 1, serverUrl.length()) == "/") {
-            serverUrl = serverUrl.substring(0, serverUrl.length() - 1);
-        }
-
+        var serverUrl = getNormalizedServerUrl();
         var username = _username + "";
         var url = serverUrl + "/rest/" + endpoint + ".view?";
-        url += "u=" + username;
-        url += "&v=" + _apiVersion;
-        url += "&c=" + _clientName;
+        url += "u=" + encodeParam(username);
+        url += "&v=" + encodeParam(_apiVersion);
+        url += "&c=" + encodeParam(_clientName);
         url += "&f=json";
 
         if (_legacyAuth) {
             var pwdBytes = stringToByteArray(_password + "");
             var hexPwd = bytesToHex(pwdBytes);
-            url += "&p=" + hexPwd + "&enc=hex";
+            url += "&p=" + encodeParam(hexPwd) + "&enc=hex";
         } else {
             var auth = generateAuthToken();
             var token = auth["t"] as String?;
             var salt = auth["s"] as String?;
             if (token != null && salt != null) {
-                url += "&t=" + token;
-                url += "&s=" + salt;
+                url += "&t=" + encodeParam(token);
+                url += "&s=" + encodeParam(salt);
             }
         }
 
@@ -160,7 +170,7 @@ class YuMusicSubsonicAPI {
     // Test server connection
     function ping(callback as Method(responseCode as Number, data as Dictionary or String or PersistedContent.Iterator or Null) as Void) as Void {
         var url = buildBaseUrl("ping");
-        System.println("ping url: " + url);
+        System.println("ping request");
         if (url.length() == 0) {
             callback.invoke(0, null);
             return;
@@ -177,7 +187,7 @@ class YuMusicSubsonicAPI {
     // Get all playlists
     function getPlaylists(callback as Method(responseCode as Number, data as Dictionary or String or PersistedContent.Iterator or Null) as Void) as Void {
         var url = buildBaseUrl("getPlaylists");
-        System.println("getPlaylists url: " + url);
+        System.println("getPlaylists request");
         if (url.length() == 0) {
             callback.invoke(0, null);
             return;
@@ -194,8 +204,8 @@ class YuMusicSubsonicAPI {
     // Get playlist details with songs.
     // Subsonic API getPlaylist does not support pagination.
     function getPlaylist(playlistId as String, callback as Method(responseCode as Number, data as Dictionary or String or PersistedContent.Iterator or Null) as Void) as Void {
-        var url = buildBaseUrl("getPlaylist") + "&id=" + playlistId;
-        System.println("getPlaylist url: " + url);
+        var url = buildBaseUrl("getPlaylist") + "&id=" + encodeParam(playlistId);
+        System.println("getPlaylist request id=" + playlistId);
         
         var options = {
             :method => Communications.HTTP_REQUEST_METHOD_GET,
@@ -207,7 +217,7 @@ class YuMusicSubsonicAPI {
 
     // Get random songs
     function getRandomSongs(size as Number, callback as Method(responseCode as Number, data as Dictionary or String or PersistedContent.Iterator or Null) as Void) as Void {
-        var url = buildBaseUrl("getRandomSongs") + "&size=" + size.toString();
+        var url = buildBaseUrl("getRandomSongs") + "&size=" + encodeParam(size);
         
         var options = {
             :method => Communications.HTTP_REQUEST_METHOD_GET,
@@ -231,7 +241,7 @@ class YuMusicSubsonicAPI {
 
     // Get artist albums
     function getArtist(artistId as String, callback as Method(responseCode as Number, data as Dictionary or String or PersistedContent.Iterator or Null) as Void) as Void {
-        var url = buildBaseUrl("getArtist") + "&id=" + artistId;
+        var url = buildBaseUrl("getArtist") + "&id=" + encodeParam(artistId);
         
         var options = {
             :method => Communications.HTTP_REQUEST_METHOD_GET,
@@ -243,7 +253,7 @@ class YuMusicSubsonicAPI {
 
     // Get album songs
     function getAlbum(albumId as String, callback as Method(responseCode as Number, data as Dictionary or String or PersistedContent.Iterator or Null) as Void) as Void {
-        var url = buildBaseUrl("getAlbum") + "&id=" + albumId;
+        var url = buildBaseUrl("getAlbum") + "&id=" + encodeParam(albumId);
         
         var options = {
             :method => Communications.HTTP_REQUEST_METHOD_GET,
@@ -255,7 +265,7 @@ class YuMusicSubsonicAPI {
 
     // Search for songs, albums, artists
     function search(query as String, callback as Method(responseCode as Number, data as Dictionary or String or PersistedContent.Iterator or Null) as Void) as Void {
-        var url = buildBaseUrl("search3") + "&query=" + query;
+        var url = buildBaseUrl("search3") + "&query=" + encodeParam(query);
         url += "&artistCount=10&albumCount=10&songCount=20";
         
         var options = {
@@ -283,28 +293,28 @@ class YuMusicSubsonicAPI {
             return "";
         }
 
-        var url = _serverUrl + "/rest/download.view?";
-        url += "id=" + songId;
-        url += "&u=" + _username;
-        url += "&v=" + _apiVersion;
-        url += "&c=" + _clientName;
+        var url = getNormalizedServerUrl() + "/rest/download.view?";
+        url += "id=" + encodeParam(songId);
+        url += "&u=" + encodeParam(_username);
+        url += "&v=" + encodeParam(_apiVersion);
+        url += "&c=" + encodeParam(_clientName);
 
         if (_legacyAuth) {
             var pwdBytes = stringToByteArray(_password + "");
             var hexPwd = bytesToHex(pwdBytes);
-            url += "&p=" + hexPwd + "&enc=hex";
+            url += "&p=" + encodeParam(hexPwd) + "&enc=hex";
         } else {
             var auth = generateAuthToken();
             var token = auth["t"] as String?;
             var salt = auth["s"] as String?;
             if (token != null && salt != null) {
-                url += "&t=" + token;
-                url += "&s=" + salt;
+                url += "&t=" + encodeParam(token);
+                url += "&s=" + encodeParam(salt);
             }
         }
         
         url += "&format=mp3";
-        url += "&maxBitRate=" + _maxBitRate;
+        url += "&maxBitRate=" + encodeParam(_maxBitRate);
 
         return url;
     }
@@ -317,25 +327,25 @@ class YuMusicSubsonicAPI {
             return "";
         }
 
-        var url = _serverUrl + "/rest/stream.view?";
-        url += "id=" + songId;
-        url += "&u=" + _username;
-        url += "&v=" + _apiVersion;
-        url += "&c=" + _clientName;
+        var url = getNormalizedServerUrl() + "/rest/stream.view?";
+        url += "id=" + encodeParam(songId);
+        url += "&u=" + encodeParam(_username);
+        url += "&v=" + encodeParam(_apiVersion);
+        url += "&c=" + encodeParam(_clientName);
         url += "&format=mp3";
-        url += "&maxBitRate=" + _maxBitRate;
+        url += "&maxBitRate=" + encodeParam(_maxBitRate);
 
         if (_legacyAuth) {
             var pwdBytes = stringToByteArray(_password + "");
             var hexPwd = bytesToHex(pwdBytes);
-            url += "&p=" + hexPwd + "&enc=hex";
+            url += "&p=" + encodeParam(hexPwd) + "&enc=hex";
         } else {
             var auth = generateAuthToken();
             var token = auth["t"] as String?;
             var salt = auth["s"] as String?;
             if (token != null && salt != null) {
-                url += "&t=" + token;
-                url += "&s=" + salt;
+                url += "&t=" + encodeParam(token);
+                url += "&s=" + encodeParam(salt);
             }
         }
         
@@ -350,24 +360,24 @@ class YuMusicSubsonicAPI {
             return "";
         }
 
-        var url = _serverUrl + "/rest/getCoverArt.view?";
-        url += "id=" + coverArtId;
-        url += "&size=" + size.toString();
-        url += "&u=" + _username;
-        url += "&v=" + _apiVersion;
-        url += "&c=" + _clientName;
+        var url = getNormalizedServerUrl() + "/rest/getCoverArt.view?";
+        url += "id=" + encodeParam(coverArtId);
+        url += "&size=" + encodeParam(size);
+        url += "&u=" + encodeParam(_username);
+        url += "&v=" + encodeParam(_apiVersion);
+        url += "&c=" + encodeParam(_clientName);
 
         if (_legacyAuth) {
             var pwdBytes = stringToByteArray(_password + "");
             var hexPwd = bytesToHex(pwdBytes);
-            url += "&p=" + hexPwd + "&enc=hex";
+            url += "&p=" + encodeParam(hexPwd) + "&enc=hex";
         } else {
             var auth = generateAuthToken();
             var token = auth["t"] as String?;
             var salt = auth["s"] as String?;
             if (token != null && salt != null) {
-                url += "&t=" + token;
-                url += "&s=" + salt;
+                url += "&t=" + encodeParam(token);
+                url += "&s=" + encodeParam(salt);
             }
         }
 
@@ -376,12 +386,12 @@ class YuMusicSubsonicAPI {
 
     // Scrobble a single song with an optional exact UTC timestamp
     function scrobble(songId as String, timestamp as Number?, callback as Method(responseCode as Number, data as Dictionary or String or PersistedContent.Iterator or Null) as Void) as Void {
-        var url = buildBaseUrl("scrobble") + "&id=" + songId;
+        var url = buildBaseUrl("scrobble") + "&id=" + encodeParam(songId);
         
         if (timestamp != null) {
-            url += "&time=" + timestamp.toString() + "000"; // Subsonic expects milliseconds
+            url += "&time=" + encodeParam(timestamp.toString() + "000"); // Subsonic expects milliseconds
         } else {
-            url += "&time=" + Toybox.Time.now().value().toString() + "000"; 
+            url += "&time=" + encodeParam(Toybox.Time.now().value().toString() + "000");
         }
         
         url += "&submission=true";
@@ -396,7 +406,7 @@ class YuMusicSubsonicAPI {
 
     // Star a song/album/artist
     function star(itemId as String, callback as Method(responseCode as Number, data as Dictionary or String or PersistedContent.Iterator or Null) as Void) as Void {
-        var url = buildBaseUrl("star") + "&id=" + itemId;
+        var url = buildBaseUrl("star") + "&id=" + encodeParam(itemId);
         
         var options = {
             :method => Communications.HTTP_REQUEST_METHOD_GET,
@@ -408,7 +418,7 @@ class YuMusicSubsonicAPI {
 
     // Unstar a song/album/artist
     function unstar(itemId as String, callback as Method(responseCode as Number, data as Dictionary or String or PersistedContent.Iterator or Null) as Void) as Void {
-        var url = buildBaseUrl("unstar") + "&id=" + itemId;
+        var url = buildBaseUrl("unstar") + "&id=" + encodeParam(itemId);
         
         var options = {
             :method => Communications.HTTP_REQUEST_METHOD_GET,
